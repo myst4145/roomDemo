@@ -18,7 +18,7 @@
     "uuid": "^9.0.0"
   },
   "scripts": {
-    "start": "index.js"
+    "start": "node index.js"
   },
   "name": "server",
   "version": "1.0.0",
