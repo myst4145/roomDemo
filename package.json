@@ -18,7 +18,7 @@
     "uuid": "^9.0.0"
   },
   "scripts": {
-    "start": "nodemon index.js"
+    "start": "index.js"
   },
   "name": "server",
   "version": "1.0.0",
