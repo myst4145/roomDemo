@@ -17,9 +17,6 @@
     "sweetalert2": "^11.7.3",
     "uuid": "^9.0.0"
   },
-  "scripts": {
-    "start": "index.js"
-  },
   "name": "server",
   "version": "1.0.0",
   "main": "index.js",
