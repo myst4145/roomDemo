@@ -17,18 +17,14 @@
     "sweetalert2": "^11.7.3",
     "uuid": "^9.0.0"
   },
+  "scripts": {
+    "start": "index.js"
+  },
   "name": "server",
   "version": "1.0.0",
   "main": "index.js",
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
-  "scripts": {
-"start": "node index.js"
-},
-  "engines": {
-    "npm": "9.1.1",
-    "node": "18.16.0"
-  }
+  "description": ""
 }
