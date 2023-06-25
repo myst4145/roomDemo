@@ -24,6 +24,9 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "scripts": {
+"start": "node index.js"
+},
   "engines": {
     "npm": "9.1.1",
     "node": "18.16.0"
