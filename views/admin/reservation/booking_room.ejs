@@ -1,0 +1,198 @@
+<style>
+  .confirm-booking i,
+  .cancel-booking i {
+    margin-right: 7px;
+  }
+
+  #slip-modal-img {
+    width: 100%;
+    height: 300px;
+  }
+
+  #slip-modal-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+</style>
+<div class="container">
+  <h4 class="fw-bold">จองห้องพัก</h4>
+  <div class="wrapper-content-page">
+    <%  if(entries.length==0) { %>
+    <div class="empty-table">
+      <div class="empty-icon-table text-blue">
+        <i class="fa-solid fa-circle-exclamation"></i>
+      </div>
+      <h5 class="fw-bold text-darkgray">ไม่มีรายการจอง</h5>
+    </div>
+    <% } else if(entries.length > 0) { %>
+    <table class="table">
+      <thead>
+        <tr class="align-middle">
+          <th style="width:5% ;">รายการ</th>
+          <th style="width:10% ;">ห้อง</th>
+          <th style="width:15% ;">เบอร์ติดต่อ</th>
+          <th style="width:20% ;">วันที่จอง</th>
+          <th style="width:15% ;" class="text-center">
+            การชำระเงิน
+          </th>
+          <th class="text-center" style="width:15% ;">
+            รายละเอียด
+          </th>
+          <th class="text-end" style="width:20% ;">
+            <i class="fa-solid fa-bars"></i>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for(let i=0;i<entries.length;i++){ %>
+        <tr class="align-middle">
+          <td>
+            <%= i+1 %>
+          </td>
+          <td>
+            <%= entries[i].room_number %>
+          </td>
+          <td>
+            <%= entries[i].phone %>
+          </td>
+          <td>
+            <%= entries[i].created %>
+          </td>
+          <td class="text-center">
+            <button class="ac-btn fw-bold text-darkgray bg-none booking-slip" data-statement="<%= entries[i].statement %>">
+              <i class="fa-solid fa-credit-card"></i>
+            </button>
+          </td>
+          <td class="text-center">
+            <button class="ac-btn fw-bold text-darkgray bg-none booking-room-detail" data-detail="<%= JSON.stringify(entries[i])  %>">
+              <i class="fa-solid fa-book-open-reader"></i>
+            </button>
+          </td>
+          <td class="text-end">
+            <button class="ac-btn text-blue bg-none border-radius-12 confirm-booking" data-id="<%= entries[i].booking_id %>">
+              <i class="fa-solid fa-circle-check"></i>
+              ตกลง
+            </button>
+            <button class="ac-btn  text-red bg-none border-radius-12 cancel-booking" data-bookingid="<%= entries[i].booking_id %>" data-roomid="<%= entries[i].room_id %>" data-number="<%= entries[i].room_number %>">
+              <i class="fa-solid fa-circle-xmark"></i>
+              ยกเลิก
+            </button>
+          </td>
+        </tr>
+        <% } %>
+      </tbody>
+    </table>
+    <% } %>
+  </div>
+  <%- include('booking_room_detail_modal')  %>
+  <%- include('booking_room_slip_modal')  %>
+</div>
+<script>
+  $('.confirm-booking').click(function() {
+    const id = $(this).attr('data-id')
+    confirm('ยืนยันการจอง', 'คุณต้องการยืนยันการจองใช่ หรือไม่ ?')
+      .then((result) => {
+        if (result.isConfirmed) {
+          axios.post('/api/confirm-booking', {
+              'id': id
+            })
+            .then((res) => {
+              const result = res.data.result
+
+              if (result) {
+                querySuccess('ยีนยันการจองสำเร็จ', 1000)
+              }
+
+              if (!result) {
+                queryFail('ยีนยันการจอง', 'ยีนยันการจองล้มเหลว', res.data.err)
+              }
+            })
+            .catch((err) => {
+              statusErr()
+            })
+        }
+      })
+  })
+
+  $('.cancel-booking').click(function() {
+    const roomid = $(this).attr('data-roomid')
+    const boomkingId = $(this).attr('data-bookingid')
+    const number = $(this).attr('data-number')
+    confirm('ยกเลิกการจอง', 'คุณต้องการยกเลิกการจองใช่ หรือไม่ ?')
+      .then((result) => {
+        if (result.isConfirmed) {
+          axios.post('/api/cancel-booking', {
+              'room_id': roomid,
+              'booking_id': boomkingId,
+              'number': number
+            })
+            .then((res) => {
+              const result = res.data.result
+
+              if (result) {
+                querySuccess('ยกเลิกการจองสำเร็จ', 1000)
+              }
+
+              if (!result) {
+                queryFail('ยกเลิกการจอง', 'ยกเลิกการจองล้มเหลว', res.data.err)
+              }
+            })
+            .catch((err) => {
+              statusErr()
+            })
+        }
+      })
+  })
+  $('.booking-room-detail').click(function() {
+    const detail = JSON.parse($(this).attr('data-detail'))
+    const {
+      booking_id,
+      room_id,
+      room_number,
+      price,
+      full_price,
+      times_count,
+      fname,
+      lname,
+      person_count,
+      phone,
+      checkin,
+      checkout,
+      created,
+      modified,
+      pattern,
+      statement,
+      status
+    } = detail
+    const payment = Display.setPayment(detail.payment)
+
+    const dataTable = [
+      room_number,
+      full_price,
+      price,
+      times_count,
+      fname,
+      lname,
+      person_count,
+      phone,
+      checkin,
+      checkout, created,
+      payment,
+      status
+    ]
+    $('#booking-room-title').text(booking_id)
+    const textBookingroomDetail = $('.text-booking-room-detail')
+    for (let i = 0; i < dataTable.length; i++) {
+      const d = dataTable[i]
+      $(textBookingroomDetail[i]).text(d)
+    }
+    new bootstrap.Modal($('#booking-room-detail')).show()
+  })
+
+  $('.booking-slip').click(function() {
+    const img = `<img src="/src/img/slip_payment/${$(this).attr('data-statement')}">`
+    $('#slip-modal-img').html(img)
+    new bootstrap.Modal($('#booking-slip-payment')).show()
+  })
+</script>

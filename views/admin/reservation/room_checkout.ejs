@@ -1,0 +1,303 @@
+<link rel="stylesheet" href="/css/room_checkout.css">
+<div class="container">
+  <h4 class="fw-bold">ลงทะเบียนออกห้องพัก</h4>
+  <div class="wrapper-page">
+    <div class="row my-2">
+      <div class="col-xxl-8 col-xl-8 col-lg-8 col-md-12 col-sm-12 col-xs-12">
+        <div class="my-2">
+          <div class="input-group">
+            <label class="input-group-text">
+              <i class="fa-solid fa-address-card"></i>
+            </label>
+            <input type="email" class="form-control" id="name" min="1" placeholder="กรุณาป้อนชื่อผู้พัก">
+          </div>
+        </div>
+      </div>
+
+      <div class="col-xxl-4 col-xl-4 col-lg-4 col-md-12 col-sm-12 col-xs-12">
+        <div class="my-2">
+          <div class="input-group">
+            <label class="input-group-text">
+              <i class="fa-solid fa-stopwatch"></i>
+            </label>
+            <select class="form-select" id="list-date">
+              <option value="" selected>เลือกเวลา</option>
+              <option value="this-date">วันนี้</option>
+              <option value="this-month">เดือนนี้</option>
+              <option value="this-year">ปีนี้</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row my-2">
+      <div class="col-xxl-3 col-xl-3 col-lg-3 col-md-6 col-sm-12 col-xs-12">
+        <div class="my-2">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fa-solid fa-clock"></i>
+            </span>
+            <input type="number" id="date" class="input-date form-control" placeholder="ป้อนจำนวนวัน">
+          </div>
+        </div>
+      </div>
+      <div class="col-xxl-3 col-xl-3 col-lg-3 col-md-6 col-sm-12 col-xs-12">
+        <div class="my-2">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fa-solid fa-clock-rotate-left"></i>
+            </span>
+            <input type="number" id="month" class="input-date form-control" min="1" placeholder="ป้อนจำนวนเดือน">
+          </div>
+        </div>
+      </div>
+      <div class="col-xxl-3 col-xl-3 col-lg-3 col-md-6 col-sm-12 col-xs-12">
+        <div class="my-2">
+          <div class="input-group">
+            <span class="input-group-text">
+              <i class="fa-solid fa-arrows-rotate"></i>
+            </span>
+            <input type="number" id="year" class="form-control input-date" min="1" placeholder="ป้อนจำนวนปี">
+          </div>
+        </div>
+      </div>
+      <div class="col-xxl-6 col-xl-6 col-lg-6 col-md-12 col-sm-12 col-xs-12">
+        <button class="ac-btn bg-red border-radius-7" id="checkout-reset">
+          รีเซ็ตค่า
+        </button>
+        <button class="ac-btn text-darkgray bg-none" id="checkout-entries">
+          ทั้งหมด
+        </button>
+        <button class="ac-btn text-blue bg-none" id="checkout-search">
+          ค้นหา
+        </button>
+      </div>
+    </div>
+  </div>
+  <script>
+    function setqueryParams(search, key) {
+      return search != '' ? `&${key}=${search}` : ''
+    }
+
+    function addDate(value, today, dt, add) {
+      const gt = Number.parseInt(value) * 1000 * 60 * 60 * 24 * add + dt
+      const dEnd = new Date(gt)
+      const yearEnd = dEnd.getFullYear()
+      const mEnd = Display.countDate(dEnd.getMonth() + 1)
+      const dtEnd = Display.countDate(dEnd.getDate())
+      return value != '' ? `&ds=${today}&de=${yearEnd}-${mEnd}-${dtEnd}` : ''
+    }
+    $('#checkout-search').click(function() {
+      let route = ''
+      let name = $('#name').val()
+      name = name.includes(' ') ? name.replaceAll(' ', '-') : name
+      let listDate = $('#list-date').val()
+      const date = $('#date').val()
+      const month = $('#month').val()
+      const year = $('#year').val()
+
+      const d = new Date()
+      const _dt = Display.countDate(d.getDate())
+      const _m = Display.countDate(d.getMonth() + 1)
+      const _year = d.getFullYear()
+      const lastDayOfMonth = Number.parseInt(new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate())
+      const today = `${_year}-${_m}-${_dt}`
+      const todayTimestamp = new Date(`${_year}-${_m}-${_dt}`).valueOf()
+
+      if (listDate != '') {
+        if (listDate == 'this-date') {
+          route += `&dt=${_year}-${_m}-${_dt}`
+        }
+
+        if (listDate == 'this-month') {
+          route += `&ds=${_year}-${_m}-01&de=${_year}-${_m}-${lastDayOfMonth}`
+        }
+
+        if (listDate == 'this-year') {
+          route += `&ds=${_year}-01-01&de=${_year}-12-31`
+        }
+      }
+
+
+
+
+      route += addDate(date, today, todayTimestamp, 1)
+      route += addDate(month, today, todayTimestamp, 30)
+      route += addDate(year, today, todayTimestamp, 12 * 30)
+      route += setqueryParams(name, 'name')
+
+
+      if (route != '') {
+        const thisPage = window.location.href
+        const end = thisPage.includes('&') ? thisPage.indexOf('&') : -1
+        route = end >= 0 ? thisPage.substring(0, end) + route : thisPage + route
+        window.location.assign(route)
+      }
+    })
+
+
+
+
+    $('#checkout-entries').click(function() {
+      const thisPage = window.location.href
+      const route = !thisPage.includes('&') ? thisPage : thisPage.substring(0, thisPage.indexOf('&'))
+      window.location.assign(route)
+    })
+
+
+
+    $('#checkout-reset').click(function() {
+      $('#month').val('')
+      $('#year').val('')
+      $('#list-date').val('')
+      $('#name').val('')
+      $('#date').val('')
+    })
+
+
+
+
+    $('#list-date').change(function() {
+      $('#name').val('')
+      $('.input-date').val('')
+    })
+
+    $('#name').keyup(function() {
+      $('.input-date').val('')
+      $('#list-date').val('')
+    })
+
+
+    $('.input-date').change(function() {
+      $('#list-date').val('')
+      $('#name').val('')
+    })
+
+    $('.input-date').keyup(function() {
+      $('#list-date').val('')
+      $('#name').val('')
+      if (isNaN(Number.parseFloat($(this).val()))) {
+        $(this).val()
+      }
+    })
+    $('#date').change(function() {
+      $('#month').val('')
+      $('#year').val('')
+      $('#list-date').val('')
+      $('#name').val('')
+    })
+
+    $('#date').keyup(function() {
+      $('#month').val('')
+      $('#year').val('')
+      $('#list-date').val('')
+      $('#name').val('')
+    })
+
+
+    $('#month').change(function() {
+      $('#date').val('')
+      $('#year').val('')
+      $('#list-date').val('')
+      $('#name').val('')
+    })
+
+    $('#month').keyup(function() {
+      $('#date').val('')
+      $('#year').val('')
+      $('#list-date').val('')
+      $('#name').val('')
+    })
+
+    $('#year').change(function() {
+      $('#date').val('')
+      $('#month').val('')
+      $('#list-date').val('')
+      $('#name').val('')
+    })
+
+    $('#year').keyup(function() {
+      $('#date').val('')
+      $('#month').val('')
+      $('#list-date').val('')
+      $('#name').val('')
+    })
+  </script>
+  <div class="wrapper-content-page">
+    <% if(entries.length ==0) { %>
+    <div class="empty-table">
+      <div class="empty-icon-table text-blue">
+        <i class="fa-solid fa-circle-exclamation"></i>
+      </div>
+      <h5 class="fw-bold text-secondary">ไม่มีรายการ</h5>
+    </div>
+    <% } else if(entries.length > 0) { %>
+    <table class="table">
+      <thead>
+        <tr class="align-middle">
+          <th width="10%">ห้อง </th>
+          <th width="30%">ห้อง </th>
+          <th width="10%">จำนวน</th>
+          <th width="10%">ราคา</th>
+          <th width="20%">วันออก</th>
+          <th width="20%" class="text-center">ลงทะเบียนออก</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <% for(let i=0;i<entries.length;i++) { %>
+        <tr class="align-middle">
+          <td>
+            <p class="text-number-r bg-dark-pink">
+              <%= entries[i].room_number  %>
+            </p>
+          </td>
+          <td><%= entries[i].fname+' '+entries[i].lname  %></td>
+          <td><%= entries[i].times_count+ ' '+ entries[i].unit_display  %></td>
+          <td><%= entries[i].display_price  %></td>
+          <td><%= entries[i].checkout  %></td>
+          <td class="text-center">
+            <button class="ac-btn text-darkgray bg-none room-checkout" data-id="<%= entries[i].booking_id %>" data-roomid="<%= entries[i].room_id %>" data-number="<%=entries[i].room_number %>">
+              <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+          </td>
+        </tr>
+        <% }  %>
+      </tbody>
+    </table>
+    <%} %>
+  </div>
+  <%- include('room_detail_modal') %>
+</div>
+
+<script>
+  $('.room-checkout').click(function() {
+    const id = $(this).attr('data-id')
+    const roomId = $(this).attr('data-roomid')
+    const number = $(this).attr('data-number')
+
+    confirm('ยืนยันการลงทะเบียนห้องพัก', 'คุณต้องยืนยันการลงทะเบียนออกห้องพัก ใช่หรือ ไม่ ?')
+      .then((result) => {
+        if (result.isConfirmed) {
+          axios.post('/api/checkout-room', {
+              'booking_id': id,
+              'room_id': roomId,
+              'number': number
+            })
+            .then((res) => {
+              const result = res.data.result
+              if (result) {
+                querySuccess('ลงทะเบียนออกสำเร็จ', 1000)
+              }
+
+              if (!result) {
+                queryFail('ลงทะเบียนออกห้องพัก', 'การลงทะเบียนล้มเหลว', res.data.err)
+              }
+            })
+            .catch((err) => {
+              statusErr()
+            })
+        }
+      })
+  })
+</script>

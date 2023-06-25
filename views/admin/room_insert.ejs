@@ -1,0 +1,430 @@
+<link rel="stylesheet" href="/css/room.css">
+<div class="container">
+  <h4 class="fw-bold">เพิ่มห้องพัก</h4>
+  <div class="wrapper-content-page">
+    <div class="input-group input-300 my-3">
+      <span class="input-group-text">จำนวนห้อง</span>
+      <input type="number" value="1" min="1" class="form-control" id="count-room" />
+      <button class="fw-bold btn ac-btn bg-blue" id="add-count-room">ตกลง</button>
+    </div>
+
+    <%- include('room_insert_form/room_insert_roomnumber_form') %>
+    <% building_id = entries.map((e,i)=>{ return e.building_id }).join(',') %>
+    <% building_number = entries.map((e,i)=>{ return e.building_number }).join(',') %>
+    <% building_name = entries.map((e,i)=>{ return e.building_name }).join(',') %>
+
+    <input type="hidden" id="building-id" value="<%= building_id %>">
+    <input type="hidden" id="building-name" value="<%= building_number %>">
+    <input type="hidden" id="building-number" value="<%= building_name %>">
+
+    <script>
+      const countRoom = $("#count-room");
+      const addCountRoom = $("#add-count-room");
+
+      const buildingId = $('#building-id').val().split(',')
+      const buildingName = $('#building-name').val().split(',')
+      const buildingNumber = $('#building-number').val().split(',')
+
+
+      addCountRoom.click(function() {
+        let roomGroupEl = ``;
+        const count = countRoom.val();
+        let createFloorEl = ``
+        for (let i = 0; i < buildingId.length; i++) {
+          const id = buildingId[i]
+          const num = buildingName[i]
+          const n = buildingNumber[i]
+          let text = ``
+
+          if (n == '' && num == '') {
+            text = n
+          } else if (n != '') {
+            text = n
+          } else if (n == '') {
+            text = num
+          }
+          const opt = `<option value="${id}">${text}</option>`
+          createFloorEl += opt
+        }
+        for (let i = 1; i <= count; i++) {
+          const roomGroupItem = ` 
+                  <div class="row">
+                    <div class="col-xxl-6 col-xl-6 col-lg-6 col-md-12 col-sm-12 col-xs-12">
+                      <div class="input-group my-1">
+                        <input type="text" name="room-number"  class="form-control" onkeyup="duplicateRoom(event)" placeholder="หมายเลขห้อง">
+                        <select class="form-select"  onchange="buildingfloorItems(event)" name ="building-n">
+                          <option value="" selected>เลือกอาคาร</option>
+                          ${createFloorEl}
+                        </select>
+                        <select class="form-select" disabled name="building-floor" onchange="duplicateRoom(event)">
+                          <option value="" selected>เลือกชั้น</option>
+                        </select>
+                        <button class="ac-btn bg-red input-room-number" onclick="deleteInputNumber(event)">
+                          <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  `;
+          roomGroupEl += roomGroupItem;
+        }
+        $("#room-group").append(roomGroupEl);
+        $('#count-room').val(1)
+      });
+
+      function deleteInputNumber(event) {
+        const inputRoomNumber = $('.input-room-number').length
+
+        if (inputRoomNumber > 1) {
+          const tagName = event.target.tagName.toLowerCase()
+          if (tagName == 'i') {
+            $(event.target).parent().parent().remove()
+          } else if (tagName == 'button') {
+            $(event.target).parent().remove()
+          }
+        }
+
+      }
+
+      function buildingfloorItems(e) {
+        const selfEl = (e.target);
+        const building = $(selfEl).val();
+        const floorChildren = $(selfEl).next()
+
+        duplicateRoom(e)
+
+
+        if (building == '') {
+          floorChildren.html(`<option value="">เลือกชั้น</option>`);
+          floorChildren.prop('disabled', true)
+        } else if (building != '') {
+          const data = {
+            building: building,
+          };
+          axios
+            .post("/api/building-floor", data)
+            .then((res) => {
+              const data = res.data;
+              const entries = data.entries;
+              let floorEl = `<option value="" selected>เลือกชั้น</option>`;
+              for (let i = 1; i <= entries; i++) {
+                floorEl += `<option value="${i}">${i}</option>`;
+              }
+              floorChildren.html(floorEl);
+              floorChildren.prop('disabled', false)
+            })
+            .catch((err) => {
+              console.log(err);
+            });
+
+
+        };
+      }
+    </script>
+  </div>
+
+  <div>
+    <p class="my-1 fw-bold">
+      * หากไม่ทราบว่าห้องพักของท่านตรงกับตัวเลือกไหน โปรดคลิกเพื่อดูรายละเอียด
+    </p>
+    <p class="my-1 fw-bold">
+      * หากห้องพักของท่านไม่ตรงกับตัวเลือกเหล่านี้โปรดเลือกไม่ระบุ
+    </p>
+  </div>
+  
+  <%- include('room_insert_form/room_insert_typeroom_form') %>
+  <%- include('./roomtype-modal-info') %>
+
+  <%- include('room_insert_form/room_insert_bedtype_form') %>
+  <%- include('./bedtype-modal-info') %>
+
+  <%- include('room_insert_form/room_insert_roomview_form') %>
+  <%- include('./roomview-modal-info') %>
+
+  <%- include('room_insert_form/room_insert_spicialoptions_form') %>
+
+
+
+  <div class="my-3">
+    <h6 class="fw-bold form-label">
+      <i class="fa-regular fa-comment-dots"></i>
+      คำอธิบาย - รายละเอียด
+    </h6>
+    <textarea class="form-control" id="desc-room" rows="12"></textarea>
+    <p class="empty-validate" id="validate-descript"></p>
+  </div>
+
+
+
+  <div class="my-3">
+    <label for="room-upload" class="ac-btn label-upload bg-violet">
+      <i class="fa-solid fa-paperclip"></i>
+      อัพโหลดรูปภาพ
+      <input type="file" class="input-file" id="room-upload" multiple accept="image/*" />
+    </label>
+    <h6 class="fw-bold form-label">
+      <i class="fa-solid fa-photo-film"></i>
+      รูปภาพที่ต้องการอัพโหลด
+    </h6>
+    <div id="example-group-preview" class="example-preview"></div>
+    <p class="empty-validate" id="validate-roomupload"></p>
+  </div>
+
+
+  <button type="button" class="fw-bold my-2 ac-btn bg-blue border-radius-12" id="insert-room">
+    <i class="fa-solid fa-plus"></i>
+    บันทึก
+  </button>
+</div>
+<script>
+  $('#insert-room').click(() => {
+    const formAndValidateData = [{
+        name: "number",
+        formtype: "text",
+        input: [$('[name="room-number"]'), $('[name="building-n"]'), $('[name="building-floor"]')],
+        validate: $("#validate-roomnumber"),
+        isValidate: false,
+        msg: "กรุณากรอกหมายเลขห้อง",
+      },
+      {
+        name: "type",
+        formtype: "radio",
+        input: $('[name="room-type"]'),
+        validate: $("#validate-roomtype"),
+        msg: "กรุณาเลือกประเภทห้อง",
+      },
+      {
+        name: "bed",
+        formtype: "radio",
+        input: $('[name="bed-type"]'),
+        validate: $("#validate-bedtype"),
+        msg: "กรุณาเลือกประเภทเตียง",
+      },
+      {
+        name: "view",
+        formtype: "radio",
+        input: $('[name="roomview"]'),
+        validate: $("#validate-roomview"),
+        msg: "กรุณาเลือกประเภทวิวห้อง",
+      },
+      {
+        name: "special-options",
+        formtype: "checkbox",
+        input: $('[name="special-options"]'),
+        validate: $("#validate-options"),
+        msg: "กรุณาเลือกอย่างน้อย 1 ตัวเลือก",
+      },
+      {
+        name: "type",
+        formtype: "text-area",
+        input: $("#desc-room"),
+        validate: $("#validate-descript"),
+        msg: "กรุณาป้อนรายละเอียด และคำอธิบาย",
+      },
+      {
+        name: "exampleroom",
+        formtype: "file",
+        input: $("#room-upload"),
+        validate: $("#validate-roomupload"),
+        msg: "กรุณาอัพโหลดรูปภาพตัวอย่างห้อง",
+      },
+    ];
+    let emptyCount = 0;
+    formAndValidateData.forEach((fd) => {
+      const {
+        formtype,
+        validate,
+        msg,
+        name
+      } = fd;
+
+      if (name == "number") {
+        const [numberroom, building, buildingFloor] = fd.input
+        let emptyNumberroom = []
+        let emptyBuilding = []
+        let emptyBuildingFloor = []
+
+        let emptyItem = []
+        const mapnumber = $.map(numberroom, (e, i) => $(e).val().trim())
+        const mapbuilding = $.map(building, (e, i) => $(e).val().trim())
+        const mapbuildingFloor = $.map(buildingFloor, (e, i) => $(e).val().trim())
+        for (let i = 0; i < mapnumber.length; i++) {
+
+          const n = mapnumber[i]
+          const b = mapbuilding[i]
+          const bf = mapbuildingFloor[i]
+          if (i == 0) {
+            if (n == '' || b == '' || bf == '') {
+              emptyItem.push(false)
+            } else if (n != '' && b != '' && bf != '') {
+              emptyItem.push(true)
+            }
+          } else {
+            if (n == '' && b == '' && bf == '') {
+              emptyItem.push(true)
+            } else if (n != '' && b != '' && bf != '') {
+              emptyItem.push(true)
+            } else {
+              emptyItem.push(false)
+            }
+          }
+
+        }
+        const issetItemsCount = emptyItem.filter((v, i) => v == true).length
+
+        if (issetItemsCount == 0) {
+          fd.isValidate = false
+          emptyCount++
+          validateformEmpty(true, validate, 'กรุณากรอกข้อมูลอย่างน้อย 1 รายการ');
+        }
+
+        if (issetItemsCount >= 1) {
+          if (emptyItem.includes(false) == true) {
+            fd.isValidate = false
+            emptyCount++
+            validateformEmpty(true, validate, 'กรุณากรอกข้อมูลให้ครบ');
+          } else {
+            fd.isValidate = true
+            validateformEmpty(false, validate, '');
+          }
+        }
+      }
+
+      if (formtype == "text-area") {
+        const v = fd.input.val().trim()
+        if (v == '') {
+          emptyCount++;
+          validateformEmpty(true, validate, msg);
+        } else {
+          validateformEmpty(false, validate, "");
+        }
+      }
+      // ตรวจสอบข้อมูลที่มีการเลือกอย่างน้อย 1 ค่า
+      if (formtype == "radio" || formtype == "checkbox") {
+        const ckedCount = fd.input.filter(":checked").length;
+        if (ckedCount == 0) {
+          emptyCount++;
+          validateformEmpty(true, validate, msg);
+        } else if (ckedCount == 1) {
+          validateformEmpty(false, validate, "");
+        }
+      }
+
+      // ตรวจสอบข้อมูลที่เป็นไฟล์
+      if (formtype == "file") {
+        const fileCount = fd.input[0].files.length;
+        if (fileCount == 0) {
+          emptyCount++;
+          validateformEmpty(true, validate, msg);
+        } else if (fileCount > 0) {
+          validateformEmpty(false, validate, msg);
+        }
+      }
+    });
+
+    if (!formAndValidateData[0].isValidate) {
+      validateformEmpty(true, $("#validate-roomnumber"), 'กรุณากรอกข้อมูลให้ครบ')
+    } else {
+      if (!isUniqueRoom) {
+        validateformEmpty(true, $("#validate-roomnumber"), 'ไม่สามารถใช้หมายเลขนี้ได้ เนื่องจากอาคารนี้ใช้หมายเลขนี้แล้ว')
+      }else{
+        validateformEmpty(false, $("#validate-roomnumber"), '')
+      }
+    }
+    
+
+    if (emptyCount == 0) {
+      if (isUniqueRoom) {
+        const fd = new FormData();
+        const mapnumberAppend = $.map(formAndValidateData[0].input[0], function(e, i) {
+          if ($(e).val() != '') {
+            return $(e).val()
+          }
+        })
+        const mapbuildingAppend = $.map(formAndValidateData[0].input[1], function(e, i) {
+          if ($(e).val() != '') {
+            return $(e).val()
+          }
+        })
+        const mapbuildingFloorAppend = $.map(formAndValidateData[0].input[2], function(e, i) {
+          if ($(e).val() != '') {
+            return $(e).val()
+          }
+        })
+
+
+        let mapspecialOtions = $.map($('[name="special-options"]').filter(":checked"), (v, i) => $(v).val());
+
+        const fdExampleRoom = formAndValidateData[6].input[0].files;
+        fd.append('room_number', JSON.stringify(mapnumberAppend))
+        fd.append('building', JSON.stringify(mapbuildingAppend))
+        fd.append('building_floor', JSON.stringify(mapbuildingFloorAppend))
+        fd.append("room_type", formAndValidateData[1].input.filter(':checked').val());
+        fd.append("bed_type", formAndValidateData[2].input.filter(':checked').val());
+        fd.append("room_view", formAndValidateData[3].input.filter(':checked').val());
+        fd.append("special_options", mapspecialOtions.join(","));
+        fd.append("detail", $("#desc-room").val().trim());
+
+        for (let i = 0; i < fdExampleRoom.length; i++) {
+          const example = fdExampleRoom[i];
+          fd.append("example", example);
+        }
+
+
+        axios({
+            method: "post",
+            url: "/api/insert-room",
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+            data: fd,
+          })
+          .then((res) => {
+            const result = res.data.result;
+            if (result) {
+              querySuccess('บันทึกข้อมูลห้องพักสำเร็จ', 1000)
+            }
+
+            if (!result) {
+              queryFail('บันทึกข้อมูลห้องพัก', 'เกิดข้อผิดพลาด ไม่สามารถบันทึกข้อมูลได้', res.data.err)
+            }
+          })
+          .catch((err) => {
+            statusErr()
+          });
+      }
+    }
+  });
+
+
+
+  $('[name="special-options"]').change(function() {
+    const specialOptions = $('[name="special-options"]')
+    const opt = $(this).val().trim();
+
+    if (opt == "non-special-options") {
+      for (let i = 0; i < specialOptions.length; i++) {
+        const checkItem = $(specialOptions[i]);
+        if (checkItem.val().trim() != "non-special-options") {
+          $(checkItem).prop("checked", false);
+        }
+      }
+    } else {
+      const index = $.map(specialOptions, (e) => $(e).val()).indexOf("non-special-options");
+      specialOptions.filter(`:eq(${index})`).prop('checked', false)
+    }
+  });
+
+
+
+  $("#room-upload").change(function(e) {
+    const file = e.target.files;
+    let imgItem = ``;
+    for (let i = 0; i < file.length; i++) {
+      const src = URL.createObjectURL(file[i]);
+      const img = `<img src="${src}" class="example-imgview ">`;
+      imgItem += img;
+    }
+    $("#example-group-preview").html(imgItem);
+  });
+</script>

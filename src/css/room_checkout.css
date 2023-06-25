@@ -1,0 +1,13 @@
+#checkout-form {
+  border-radius: 12px;
+  border: 2px solid #424949;
+}
+
+.form-label {
+  background-color: #CC0033;
+}
+
+
+#checkout-search i {
+  margin-right: 7px;
+}

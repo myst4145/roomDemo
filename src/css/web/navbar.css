@@ -1,0 +1,37 @@
+.navbar-brand img {
+  width: 50px !important;
+  height: 50px;
+  object-fit: contain !important;
+}
+
+.navbar-brand {
+  color: black;
+  font-weight: bold;
+}
+.navbar-toggler{
+  border: 0 !important;
+  box-shadow: none !important;
+  border: 0px !important;
+}
+.nav-link {
+  font-weight: bolder;
+  border-radius: 18px;
+  padding: 4px 12px !important;
+  margin: 0 7px;
+  border: 2px solid white;
+}
+
+.nav-link:hover {
+  color: black;
+  background-color: #FDD835;
+}
+
+@media only screen and (max-width:996px) {
+  .nav-link{
+    border-radius: 0px;
+  }
+  .nav-link:hover {
+    background: none;
+    color: black !important;
+  }
+}

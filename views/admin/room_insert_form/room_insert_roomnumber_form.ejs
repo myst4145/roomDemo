@@ -1,0 +1,81 @@
+<div id="room-group">
+  <div class="row">
+    <div class="col-xxl-6 col-xl-6 col-lg-6 col-md-12 col-sm-12 col-xs-12">
+      <div class="input-group my-1">
+        <input type="text" name="room-number" class="form-control" onkeyup="duplicateRoom(event)" placeholder="หมายเลขห้อง" />
+        <select class="form-select" onchange="buildingfloorItems(event)" name="building-n">
+          <option value="" selected>เลือกอาคาร</option>
+          <% for(let i= 0;i< entries.length;i++) { 
+          let   opt = ''
+            if(entries[i].building_name !='' && entries[i].building_number !='' ) { 
+              opt = entries[i].building_name 
+            } else if(entries[i].building_name !=''){ 
+              opt = entries[i].building_name 
+            }else if(entries[i].building_name =='') { 
+              opt = entries[i].building_number }
+          %>
+          <option value="<%= entries[i].building_id  %>">
+            <%= opt %>
+          </option>
+          <% } %>
+        </select>
+        <select class="form-select" disabled name="building-floor">
+          <option value="" selected>เลือกชั้น</option>
+        </select>
+        <button class="ac-btn bg-red" onclick="deleteInputNumber(event)">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let isUniqueRoom = false
+
+  function duplicateRoom(event) {
+    const selfEl = $(event.target)
+    const n = selfEl.attr('name')
+    let numberRoom = ''
+    let buildingNameId = ''
+    let numberInputEl = ''
+    let buildingInputEl = ''
+    if (n == 'room-number') {
+      numberRoom = selfEl.val()
+      buildingNameId = selfEl.parent().children(':eq(1)').val()
+
+      numberInputEl = selfEl
+      buildingInputEl = selfEl.parent().children(':eq(1)')
+    }
+    if (n == 'building-n') {
+      buildingNameId = selfEl.val()
+      numberRoom = selfEl.parent().children(':eq(0)').val()
+
+      numberInputEl = selfEl.parent().children(':eq(0)')
+      buildingInputEl = selfEl
+    }
+
+    if (buildingNameId != '' && numberRoom != '') {
+      axios.post('/api/duplicate-room', {
+          'number_room': numberRoom,
+          'building_id': buildingNameId
+        })
+        .then((res) => {
+          const result = res.data.result
+          if (!result) {
+            isUniqueRoom = false
+            validateformEmpty(true, $("#validate-roomnumber"), 'ไม่สามารถใช้หมายเลขนี้ได้ เนื่องจากอาคารนี้ใช้หมายเลขนี้แล้ว')
+          }
+
+          if (result) {
+            isUniqueRoom = true
+            validateformEmpty(false, $("#validate-roomnumber"), '')
+          }
+        })
+        .catch((err) => {
+          console.log(err)
+        })
+    }
+  }
+</script>
+<p class="empty-validate" id="validate-roomnumber"></p>

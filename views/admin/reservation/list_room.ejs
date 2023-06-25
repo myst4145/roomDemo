@@ -1,0 +1,436 @@
+<link rel="stylesheet" href="/css/list_room.css">
+<div class="container">
+  <h4 class="fw-bold">สำรวจห้องพัก</h4>
+  <%- include('room_query_form')  %>
+  <input type="hidden" id="queryParams" value="<%= JSON.stringify(query_params)  %>">
+  <script>
+    const queryParams = JSON.parse($('#queryParams').val())
+    const {
+      times,
+      unit,
+      min,
+      max,
+      b,
+      build,
+      floor,
+      rt,
+      view
+    } = queryParams
+
+    $('#select-times').val(times)
+    $('#set-unit').val(unit)
+    $('#room-type').val(rt)
+    $('#bedtype').val(b)
+    $('#room-view').val(view)
+    $('#building').val(build)
+    $('#building-floor').val(floor)
+  </script>
+  <div class="wrapper-content-page">
+    <% if(entries.length ==0) { %>
+    <div class="my-3 empty-table">
+      <div class="empty-icon-table text-darkgray">
+        <i class="fa-solid fa-circle-exclamation"></i>
+      </div>
+      <h5 class="fw-bold">ไม่มีรายการที่ค้นหา</h5>
+    </div>
+    <% } else if(entries.length > 0) { %>
+    <table class="table table-striped">
+      <thead>
+        <tr class="align-middle">
+          <th style="width: 10%;" class="text-center">รายการ</th>
+          <th style="width: 20%;">รูปภาพตัวอย่าง</th>
+          <th style="width: 20%;">หมายเลขห้อง</th>
+          <th style="width: 30%;" class="text-center">รายละเอียด เข้าพัก จอง </th>
+        </tr>
+      </thead>
+      <tbody>
+        <% for(let i=0;i<entries.length;i++) { %>
+        <tr class="align-middle">
+          <td class="text-center">
+            <%= i+1  %>
+          </td>
+          <td>
+            <img src="/src/img/example_room/<%= entries[i].example_room.split(',')[0]  %>" class="q-img">
+          </td>
+          <td>
+            <p class="text-number-r bg-blue">
+              <%= entries[i].room_number  %>
+            </p>
+          </td>
+          <td class="text-center">
+            <button class="m-1 ac-btn fw-bold bg-darkgray room-detail" data-detail="<%= JSON.stringify(entries[i]) %>" data-price="<%=entries[i].data_price %>">
+              <i class="fa-regular fa-window-restore"></i>
+              ดูข้อมูล
+            </button>
+            <button class="m-1 ac-btn fw-bold bg-violet  stay-room" data-id="<%= entries[i].room_id  %>" data-number="<%= entries[i].room_number %>" data-price="<%=entries[i].data_price %>">
+              <i class="fa-solid fa-right-from-bracket"></i>
+              เข้าพัก
+            </button>
+            <button class="m-1 ac-btn fw-bold bg-red   booking-room" data-id="<%= entries[i].room_id  %>" data-number="<%= entries[i].room_number %>" data-price="<%=entries[i].data_price %>">
+              <i class="fa-solid fa-plus"></i>
+              จองห้องพัก
+            </button>
+          </td>
+        </tr>
+        <% }  %>
+      </tbody>
+    </table>
+    <%} %>
+  </div>
+  <%- include('room_detail_modal') %>
+</div>
+
+<%- include ('stay_room_modal')  %>
+<%- include ('booking_room_modal')  %>
+
+<script>
+  $('.stay-room').click(function() {
+    $('#fname').val('')
+    $('#lname').val('')
+    $('#price').val('')
+    $('#times-count').val('')
+    $('#unit-times').val('')
+    $('#person-count').val('')
+    $('#phone').val('')
+    $.each($('[name="payment"]'), (index, e) => $(e).prop('checked', false))
+    $('#checkin-date').val('')
+    $('#checkin-times').val('')
+    $('#checkout-date').val('')
+    $('#checkout-times').val('')
+
+    const id = $(this).attr('data-id')
+    const number = $(this).attr('data-number')
+    const data_price = JSON.parse($(this).attr('data-price'))
+
+    let tableEl = ``
+    data_price.forEach((p, i) => {
+      const unit = Display.unitTimes(p.unit)
+      const price = Display.setNumberFormat(p.price)
+      const cid = `s-${p.times}-${p.unit}`
+      const timesCol = `<td>${p.times} ${unit}</td>`
+      const priceCol = `<td class="text-end">${price}</td>`
+      const checkCol = `<td class="text-center">
+                            <input class="check-input" type="checkbox" name="select-price"  onchange="checkPrice(event)" value="${p.price},${p.times},${p.unit}" id="${cid}">
+                        </td>`
+      const row = `<tr class="align-middle">
+                      ${timesCol}
+                      ${priceCol}
+                      ${checkCol}
+                    </tr>
+                  `
+      tableEl += row
+    })
+
+    $('#stay-title').text(number)
+    $('#room-id').val(id)
+    $('#room-number').val(number)
+    $('#table-stay').html(tableEl)
+    const stayRoomModal = new bootstrap.Modal($('#stay-room-modal'))
+    stayRoomModal.show()
+  })
+
+
+  $('.booking-room').click(function() {
+    $('#booking-fname').val('')
+    $('#booking-lname').val('')
+    $('#booking-price').val('')
+    $('#booking-times-count').val('')
+    $('#booking-unit-times').val('')
+    $('#booking-person-count').val('')
+    $('#booking-phone').val('')
+    $.each($('[name="booking-payment"]'), (index, e) => $(e).prop('checked', false))
+    $('#booking-checkin-date').val('')
+    $('#booking-checkin-times').val('')
+    $('#booking-checkout-date').val('')
+    $('#booking-checkout-times').val('')
+
+    const id = $(this).attr('data-id')
+    const number = $(this).attr('data-number')
+    const data_price = JSON.parse($(this).attr('data-price'))
+
+
+    let tableEl = ``
+    data_price.forEach((p, i) => {
+      const unit = Display.unitTimes(p.unit)
+      const price = Display.setNumberFormat(p.price)
+      const proiceDeposit = Math.round((Number.parseFloat(p.price) * 70) / 100)
+      const proiceDeposit_format = Display.setNumberFormat(proiceDeposit)
+
+
+      const cid = `b-${p.times}-${p.unit}`
+      const timesCol = `<td>${p.times} ${unit}</td>`
+      const priceCol = `<td class="text-end">
+                        <div class="d-flex align-items-center justify-content-end">
+                          ${price}
+                          <input class="check-input ms-2" data-fullprice="${p.price}" type="checkbox" name="booking-price"  onchange="bookingPrice(event)" value="${p.price},${p.times},${p.unit}" id="${cid}">
+                        </td>`
+      const checkCol = `<td class="text-end">
+                          <div class="d-flex align-items-center justify-content-end">
+                            ${proiceDeposit_format}
+                            <input class="check-input ms-2" data-fullprice="${p.price}" type="checkbox" name="booking-price"  onchange="bookingPrice(event)" value="${proiceDeposit},${p.times},${p.unit}" id="${cid}-deposit">
+                          </div>
+                        </td>`
+      const row = `<tr class="align-middle">
+                      ${timesCol}
+                      ${priceCol}
+                      ${checkCol}
+                    </tr>
+                  `
+      tableEl += row
+    })
+    $('#booking-title').text(number)
+    $('#booking-room-id').val(id)
+    $('#booking-room-number').val(number)
+    $('#table-booking').html(tableEl)
+    new bootstrap.Modal($('#booking-room-modal')).show()
+  })
+
+  $('#stay-submit').click(function() {
+    const stayFormData = [{
+      'name': 'payment',
+      'input': $('[name="payment"]'),
+      'validate': $('#validate-payment'),
+      'form_type': 'radio',
+      'msg': 'กรุณาเลือกวิธีการชำระเงิน'
+    }, {
+      'name': 'price',
+      'input': $('#price'),
+      'validate': $('#validate-stayprice'),
+      'form_type': 'number',
+      'msg': 'กรุณาป้อนราคา'
+    }, {
+      'name': 'times-stay',
+      'input': $('#times-count'),
+      'validate': $('#validate-timescount'),
+      'form_type': 'number',
+      'msg': 'กรุณาป้อนจำนวนเวลาพัก'
+    }, {
+      'name': 'person-count',
+      'input': $('#person-count'),
+      'validate': $('#validate-person-count'),
+      'form_type': 'select',
+      'msg': 'กรุณาป้อนจำนวนคนเข้าพัก'
+    }, {
+      'name': 'phone',
+      'input': $('#phone'),
+      'validate': $('#validate-phone'),
+      'form_type': 'select',
+      'msg': 'กรุณาป้อนเบอร์ติดต่อ'
+    }, {
+      'name': 'unit-times',
+      'input': $('#unit-times'),
+      'validate': $('#validate-unit-times'),
+      'form_type': 'select',
+      'msg': 'กรุณาป้อนเลือกหน่วย'
+    }, {
+      'name': 'fname',
+      'input': $('#fname'),
+      'validate': $('#validate-fname'),
+      'form_type': 'text',
+      'msg': 'กรุณาป้อนชื่อ'
+    }, {
+      'name': 'lname',
+      'input': $('#lname'),
+      'validate': $('#validate-lname'),
+      'form_type': 'text',
+      'msg': 'กรุณาป้อนนามสกุล'
+    }, {
+      'name': 'checkin',
+      'input': [$('#checkin-date'), $('#checkin-times')],
+      'validate': $('#validate-checkin'),
+      'form_type': 'date',
+      'msg': 'กรุณาป้อนเวลาเข้าพัก'
+    }, {
+      'name': 'checkout',
+      'input': [$('#checkout-date'), $('#checkout-times')],
+      'validate': $('#validate-checkout'),
+      'form_type': 'date',
+      'msg': 'กรุณาป้อนเวลาออก'
+    }]
+
+    let emptyCount = 0
+    stayFormData.forEach((fd) => {
+      const {
+        input,
+        validate,
+        msg,
+        form_type
+      } = fd
+
+
+      if (form_type == 'date') {
+        const filterEmpty = $(input).filter((i, e) => $(e).val() == '').length
+        if (filterEmpty != 0) {
+          validateformEmpty(true, validate, msg)
+          emptyCount++
+        } else {
+          validateformEmpty(false, validate, msg)
+        }
+
+      } else if (form_type == 'radio') {
+        const c_empty = $(input).filter(':checked').length
+        if (c_empty == 0) {
+          validateformEmpty(true, validate, msg)
+          emptyCount++
+        } else if (c_empty == 1) {
+          validateformEmpty(false, validate, msg)
+        }
+      } else {
+        const val = $(input).val().trim()
+        if (val == '') {
+          validateformEmpty(true, validate, msg)
+          emptyCount++
+        } else {
+          validateformEmpty(false, validate, msg)
+        }
+      }
+    })
+
+    const checkin = dateTimesStamp($('#checkin-date').val(), $('#checkin-times').val())
+    const checkout = dateTimesStamp($('#checkout-date').val(), $('#checkout-times').val())
+
+
+    if (emptyCount == 0) {
+      const fd = {
+        'room_id': $('#room-id').val(),
+        'room_number': $('#room-number').val(),
+        'price': $('#price').val(),
+        'payment': $('[name="payment"]').filter(':checked').val(),
+        'times_count': $('#times-count').val(),
+        'unit_times': $('#unit-times').val(),
+        'person_count': $('#person-count').val(),
+        'phone': $('#phone').val(),
+        'fname': $('#fname').val(),
+        'lname': $('#lname').val(),
+        'checkin': checkin,
+        'checkout': checkout
+
+      }
+      axios.post('/api/insert-stay', fd)
+        .then((res) => {
+          const result = res.data.result
+          if (result) {
+            querySuccess('ลงทะเบียนการเข้าพัก', 1200)
+          } else {
+            const err = res.data.err
+            queryFail('ลงทะเบียนการเข้าพัก', 'เกิดข้อผิดพลาดในการลงทะเบียน โปรดลองใหม่อีกครั้งภายหลัง', err)
+          }
+        })
+        .catch((err) => {
+          statusErr()
+        })
+    }
+
+
+  })
+
+  function dateTimesStamp(dt, times) {
+    const date = new Date(`${dt} ${times}`)
+    const _d = countDate(date.getDate())
+    const _m = countDate(date.getMonth() + 1)
+    const _y = date.getFullYear()
+    const _h = countDate(date.getHours())
+    const _minutes = countDate(date.getMinutes())
+    return `${_y}-${_m}-${_d} ${_h}:${_minutes}`
+  }
+
+  function countDate(d) {
+    return d.toString().length == 1 ? `0${d}` : d
+  }
+
+  function bookingPrice(e) {
+    const id = $(e.target).attr('id')
+    const [price, times, unit] = $(e.target).val().split(',')
+    const bookingPrice = $.map($('[name="booking-price"]'), (e, i) => $(e).attr('id'))
+
+    bookingPrice.forEach((e) => {
+      if (e != id) {
+        $(`#${e}`).prop('checked', false)
+      }
+    })
+
+    $('#booking-price').val(price)
+    $('#booking-times-count').val(times)
+    $('#booking-unit-times').val(unit)
+  }
+
+
+  function checkPrice(e) {
+    $('#checkin-date').val('')
+    $('#checkin-times').val('')
+
+    $('#checkout-date').val('')
+    $('#checkout-times').val('')
+    const id = $(e.target).attr('id')
+    const [price, times, unit] = $(e.target).val().split(',')
+    const selectPrice = $.map($('[name="select-price"]'), (e, i) => $(e).attr('id'))
+
+    selectPrice.forEach((e) => {
+      if (e != id) {
+        $(`#${e}`).prop('checked', false)
+      }
+    })
+
+    $('#price').val(price)
+    $('#times-count').val(times)
+    $('#unit-times').val(unit)
+  }
+  $('.room-detail').click(function() {
+    const data_price = JSON.parse($(this).attr('data-price'))
+    const detail = JSON.parse($(this).attr('data-detail'))
+
+    let roomRowEl = ``
+    data_price.forEach((p, i) => {
+      const unit = Display.unitTimes(p.unit)
+      const price = Display.setNumberFormat(p.price)
+      const idxCol = `<td class="text-center">${i+1}</td>`
+      const timesCol = `<td>${p.times} ${unit}</td>`
+      const priceCol = `<td class="text-end">${price}</td>`
+
+      const row = `<tr>
+                      ${idxCol}
+                      ${timesCol}
+                      ${priceCol}
+                    </tr>
+                  `
+      roomRowEl += row
+    })
+
+    const {
+      room_id,
+      building,
+      building_floor,
+      room_number,
+      smoking,
+    } = detail
+    const status = detail.status == 'empty' == 'ว่าง'
+    const bed_type = Display.resBed(detail.bed_type)
+    const room_type = Display.getRoomtype(detail.room_type)
+    const roomview = Display.getRoomview(detail.roomview)
+
+    const special_options = detail.special_options.split(',').map((sp) => {
+      return Display.resSpecialOptions(sp)
+    }).join(' ')
+
+    const example_room = detail.example_room.split(',')
+    const d = [room_number, room_type, bed_type, roomview, special_options]
+    const text_detail = $('.text-detail')
+
+
+    let imgExampleEl = ``
+    example_room.forEach((e) => {
+      const img = `<img src="/src/img/example_room/${e}" class="m-2" style="width:200px;height:250px;object-fit:contain;">`
+      imgExampleEl += img
+    })
+
+    for (let i = 0; i < d.length; i++) {
+      const td = d[i]
+      $(text_detail[i]).text(td)
+    }
+
+    $('#img-example-detail').html(imgExampleEl)
+    $('#room-title').text(room_number)
+    $('#table-price').html(roomRowEl)
+    new bootstrap.Modal($('#room-detail-modal')).show()
+  })
+</script>
