@@ -17,8 +17,10 @@
     "sweetalert2": "^11.7.3",
     "uuid": "^9.0.0"
   },
-"scripts": {
-    "start": "index.js"
+  "scripts": {
+    "build": "echo \"No build specified\" && exit 1",
+    "test": "echo \"No test specified\" && exit 1",
+    "start": "nodemon index.js",
   },
   "name": "room-system-1",
   "version": "1.0.0",
