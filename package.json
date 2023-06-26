@@ -17,9 +17,6 @@
     "sweetalert2": "^11.7.3",
     "uuid": "^9.0.0"
   },
-  "scripts": {
-    "start": "index.js"
-  },
   "name": "room-system-1",
   "version": "1.0.0",
   "main": "index.js",
