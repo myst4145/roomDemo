@@ -31,4 +31,8 @@
     "npm": "9.1.1",
     "node": "18.16.0"
   }
+   "repository": {
+    "type": "git",
+    "url": "git+https://github.com/myst4145/roomDm.git"
+  },
 }
