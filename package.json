@@ -20,7 +20,7 @@
   "scripts": {
     "start": "index.js"
   },
-  "name": "server",
+  "name": "room-system-1",
   "version": "1.0.0",
   "main": "index.js",
   "keywords": [],
